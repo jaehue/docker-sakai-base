@@ -2,7 +2,7 @@ FROM maven:3-jdk-8
 MAINTAINER jaehue@jang.io
 
 ## INSTALL TOMCAT
-ENV CATALINA_HOME /usr/local/tomcat
+ENV CATALINA_HOME /opt/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
 RUN mkdir -p "$CATALINA_HOME"
 WORKDIR $CATALINA_HOME
@@ -23,7 +23,7 @@ RUN gpg --keyserver pool.sks-keyservers.net --recv-keys \
     F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
 
 ENV TOMCAT_MAJOR 8
-ENV TOMCAT_VERSION 8.0.23
+ENV TOMCAT_VERSION 8.0.24
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 RUN set -x \
@@ -31,9 +31,18 @@ RUN set -x \
     && curl -fSL "$TOMCAT_TGZ_URL.asc" -o tomcat.tar.gz.asc \
     && gpg --verify tomcat.tar.gz.asc \
     && tar -xvf tomcat.tar.gz --strip-components=1 \
-    && rm bin/*.bat \
+    && rm -rf webapps/* \
     && rm tomcat.tar.gz*
 
+# Setup the SETENV file
+RUN echo "export JAVA_OPTS='-server -Xmx1028m -XX:MaxMetaspaceSize=512m -Dorg.apache.jasper.compiler.Parser.STRICT_QUOTE_ESCAPING=false -Djava.awt.headless=true -Dcom.sun.management.jmxremote'" > bin/setenv.sh
+
+# Configure tomcat 7/8 to use the old tomcat 5.5 classloader dirs
+COPY catalina.properties /opt/tomcat/conf/catalina.properties
+RUN mkdir -p shared/classes shared/lib common/classes common/lib server/classes server/lib
+
+# Improve startup speed
+COPY context.xml /opt/tomcat/conf/context.xml
 
 ## INSTALL SAKAI
 ENV REFRESHED_AT 2015-07-14
