@@ -45,7 +45,6 @@ RUN mkdir -p shared/classes shared/lib common/classes common/lib server/classes 
 COPY context.xml /opt/tomcat/conf/context.xml
 
 ## INSTALL SAKAI
-ENV REFRESHED_AT 2015-07-14
 RUN git clone https://github.com/sakaiproject/sakai.git /usr/src/sakai
 WORKDIR /usr/src/sakai
 RUN mvn clean install sakai:deploy -Dmaven.tomcat.home=$CATALINA_HOME
